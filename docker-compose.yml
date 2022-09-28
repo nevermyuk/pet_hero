@@ -1,0 +1,15 @@
+version: "3.7"
+services:
+  backend:
+    build:
+      dockerfile: Dockerfile
+      context: "./backend"
+      # Only will build development stage from our dockerfile
+    volumes:
+      - .:/usr/src/app
+    env_file:
+      - ./backend/.env
+    # Run a command against the development stage of the image
+    command: npm run start:dev
+    ports:
+      - 5555:5555
