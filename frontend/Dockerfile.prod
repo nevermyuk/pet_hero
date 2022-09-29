@@ -1,0 +1,27 @@
+
+# ==== CONFIGURE =====
+# Use a Node 16 base image
+FROM node:16-alpine as build
+# Set the working directory to /app inside the container
+WORKDIR /app
+RUN chown -R node:node /app
+
+# Copy app files
+COPY --chown=node:node package.json .
+
+# ==== BUILD =====
+# Install dependencies (npm ci makes sure the exact versions in the lockfile gets installed)
+RUN npm install
+
+COPY --chown=node:node . .
+
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
+
+USER node
+
+# Start the app
+RUN npm run build
+
+FROM nginx:stable
+COPY --from=build /app/build /usr/share/nginx/html

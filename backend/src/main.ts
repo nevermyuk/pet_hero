@@ -1,28 +1,29 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { TypeormStore } from 'connect-typeorm/out';
 import * as session from 'express-session';
+import helmet from 'helmet';
 import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
 import * as passport from 'passport';
+import { createDatabase } from 'typeorm-extension';
 import { AppModule } from './app.module';
-import { Session } from './typeorm/entities/Session';
-
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import helmet from 'helmet';
 import { EntityNotFoundExceptionFilter } from './filters/entity-not-found-exception.filter';
 import otelSDK from './tracing';
+import { Session } from './typeorm/entities/Session';
 
 
 
 async function bootstrap() {
   // Start SDK before nestjs factory create
   await otelSDK.start();
+  await createDatabase({ ifNotExist: true });
 
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
 
   app.use(helmet());
-  app.enableCors({ origin: 'http://localhost:3000', credentials: true });
+  app.enableCors({ origin: 'http://localhost:8080', credentials: true });
 
   app.useLogger(app.get(Logger));
   app.useGlobalInterceptors(new LoggerErrorInterceptor());
