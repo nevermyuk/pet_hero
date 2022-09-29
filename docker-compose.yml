@@ -31,7 +31,7 @@ services:
     restart: always
     env_file:
       - ./backend/.env
-    ports:
+    expose:
       - "5432:5432"
     volumes:
       - pet-hero-postgres:/var/lib/postgresql/data
@@ -97,6 +97,7 @@ services:
       driver: loki
       options:
         loki-url: http://localhost:3100/loki/api/v1/push
+
   prometheus:
     image: prom/prometheus:latest
     volumes:
@@ -104,8 +105,8 @@ services:
     entrypoint:
       - /bin/prometheus
       - --config.file=/etc/prometheus.yaml
-    ports:
-      - "9090:9090"
+    expose:
+      - "9090"
     depends_on:
       - backend
     logging:
@@ -130,6 +131,16 @@ services:
       - tempo
       - loki
       - volume_exporter
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+
+  node_exporter:
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    expose:
+      - "9100"
     logging:
       driver: loki
       options:

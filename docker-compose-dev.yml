@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
       context: "./backend"
       # Only will build development stage from our dockerfile
+      target: development
     volumes:
       - ./backend:/app
       - ./data/logs:/app/logs

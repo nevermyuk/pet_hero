@@ -4,15 +4,14 @@ services:
     build:
       dockerfile: Dockerfile
       context: "./backend"
-      # Only will build development stage from our dockerfile
+      target: production
     volumes:
       - ./backend:/app
     env_file:
       - ./backend/.env
     depends_on:
       - postgres
-    # Run a command against the development stage of the image
-    command: npm run start:dev
+    command: node dist/main.js
     ports:
       - 5555:5555
   postgres:
