@@ -1,5 +1,5 @@
-import { Interest } from '../../interest/entities/interest.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Interest } from '../../interest/entities/interest.entity';
 import AdoptionStatus from '../enums/adoptionStatus.enum';
 import PetGender from '../enums/petGender.enum';
 
