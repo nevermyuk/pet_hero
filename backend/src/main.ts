@@ -12,7 +12,6 @@ import helmet from 'helmet';
 import { EntityNotFoundExceptionFilter } from './filters/entity-not-found-exception.filter';
 import otelSDK from './tracing';
 
-declare const module: any;
 
 
 async function bootstrap() {
@@ -22,10 +21,6 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
 
-  if (module.hot) {
-    module.hot.accept();
-    module.hot.dispose(() => app.close());
-  }
   app.use(helmet());
   app.enableCors({ origin: 'http://localhost:3000', credentials: true });
 
@@ -35,7 +30,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new EntityNotFoundExceptionFilter());
 
-  const PORT = process.env.PORT || 3001;
+  const PORT = process.env.PORT || 5555;
   const sessionRepository = app
     .get(AppModule)
     .getDataSource()

@@ -1,25 +1,18 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Inject,
-  Request,
-  UseGuards,
-  BadRequestException,
+  BadRequestException, Body, Controller,
+  Get, Inject, Param, Patch, Post, Request,
+  UseGuards
 } from '@nestjs/common';
-import { InterestService } from './interest.service';
-import { CreateInterestDto } from './dto/create-interest.dto';
 import { AuthenticatedGuard } from '../auth/utils/AuthenticatedGuard';
+import { CreateInterestDto } from './dto/create-interest.dto';
+import { InterestService } from './interest.service';
 
 @Controller('interests')
 export class InterestController {
   constructor(
     @Inject('INTEREST_SERVICE')
     private readonly interestService: InterestService,
-  ) {}
+  ) { }
 
   @UseGuards(AuthenticatedGuard)
   @Post()
