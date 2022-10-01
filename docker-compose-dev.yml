@@ -8,7 +8,6 @@ services:
       target: development
     volumes:
       - ./backend:/app
-      - ./data/logs:/app/logs
     environment:
       OTEL_SERVICE_NAME: pet-hero
       OTEL_EXPORTER_JAEGER_ENDPOINT: http://tempo:14268/api/traces

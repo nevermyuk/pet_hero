@@ -1,6 +1,5 @@
 import { context, trace } from '@opentelemetry/api';
-import Pino, { destination, Logger, LoggerOptions } from 'pino';
-
+import Pino, { Logger, LoggerOptions, transport } from 'pino';
 export const loggerOptions: LoggerOptions = {
     level: 'info',
     formatters: {
@@ -19,7 +18,24 @@ export const loggerOptions: LoggerOptions = {
     },
 };
 
+export const pinoTransport = transport({
+    target: "pino-loki",
+    options: {
+        batching: true,
+        interval: 5,
+        host: "http://host.docker.internal:3100",
+        basicAuth: {
+            username: "username",
+            password: "password",
+        },
+        labels: {
+            application: "pet-hero-backend"
+        }
+    },
+});
+
 export const logger: Logger = Pino(
     loggerOptions,
-    destination(process.env.LOG_FILE_NAME),
+    pinoTransport
+    // destination(process.env.LOG_FILE_NAME),
 );
