@@ -23,7 +23,13 @@ async function bootstrap() {
 
 
   app.use(helmet());
-  app.enableCors({ origin: ['http://localhost:8080', 'http://localhost:3000'], credentials: true });
+
+  const corsOptions = {
+    origin: 'http://localhost',
+    credentials: true,            //access-control-allow-credentials:true
+    optionSuccessStatus: 200
+  }
+  app.enableCors(corsOptions);
 
   app.useLogger(app.get(Logger));
   app.useGlobalInterceptors(new LoggerErrorInterceptor());

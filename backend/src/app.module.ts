@@ -31,6 +31,7 @@ const OpenTelemetryModuleConfig = OpenTelemetryModule.forRoot({
     hostMetrics: true,
     apiMetrics: {
       enable: true,
+      ignoreUndefinedRoutes: false, //Records metrics for all URLs, even undefined ones
     },
   },
 });
@@ -64,7 +65,7 @@ const OpenTelemetryModuleConfig = OpenTelemetryModule.forRoot({
     PassportModule.register({ session: true }),
     ThrottlerModule.forRoot({
       ttl: 60,
-      limit: 100,
+      limit: 10,
     }),
     AccessControlModule.forRoles(roles),
     UsersModule,
