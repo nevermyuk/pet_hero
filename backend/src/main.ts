@@ -1,5 +1,6 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { TypeormStore } from 'connect-typeorm/out';
 import * as session from 'express-session';
@@ -18,8 +19,7 @@ async function bootstrap() {
   // Start SDK before nestjs factory create
   await otelSDK.start();
   await createDatabase({ ifNotExist: true });
-
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
 
 
   app.use(helmet());
@@ -29,7 +29,9 @@ async function bootstrap() {
     credentials: true,            //access-control-allow-credentials:true
     optionSuccessStatus: 200
   }
+
   app.enableCors(corsOptions);
+  app.set('trust proxy', 1)
 
   app.useLogger(app.get(Logger));
   app.useGlobalInterceptors(new LoggerErrorInterceptor());
@@ -46,6 +48,7 @@ async function bootstrap() {
   app.use(
     session({
       secret: 'lhasdklashjdkasdhja12po893hsjnxc',
+      proxy: true,
       saveUninitialized: false,
       resave: false,
       cookie: {

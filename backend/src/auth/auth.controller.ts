@@ -1,16 +1,19 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
-  Get, HttpCode, HttpException, HttpStatus, Inject,
+  Get, HttpCode, Inject,
   Logger,
   Post,
-  Req, UseGuards
+  Req, UseGuards, UseInterceptors
 } from '@nestjs/common';
 import { Request } from 'express';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { AuthService } from './auth.service';
 import LogoutFailException from './exceptions/logoutFail.exception';
+import ConfirmEmailDto from './utils/confirmEmail.dto';
 import { LocalAuthGuard } from './utils/LocalAuthGuard';
+import RequestWithUser from './utils/requestWithUser.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -21,12 +24,9 @@ export class AuthController {
   @Post('register')
   @HttpCode(204)
   async register(@Body() createUserDto: CreateUserDto) {
-    const registration = this.authService.register(createUserDto);
-    if (registration) {
-      return "Successfully registered."
-    } else {
-      throw new HttpException('Something bad happened..', HttpStatus.REQUEST_TIMEOUT)
-    }
+    const user = await this.authService.register(createUserDto);
+    await this.authService.sendVerificationLink(createUserDto.email);
+    return user
   }
 
   @UseGuards(LocalAuthGuard)
@@ -67,5 +67,18 @@ export class AuthController {
     } else {
       return { msg: 'Not Authenticated' };
     }
+  }
+
+  @UseInterceptors(ClassSerializerInterceptor)
+  @Post('confirm-email')
+  async confirm(@Body() confirmationData: ConfirmEmailDto) {
+    const email = await this.authService.decodeConfirmationToken(confirmationData.token);
+    await this.authService.confirmEmail(email);
+  }
+
+  @Post('resend-confirmation-link')
+  @UseGuards(LocalAuthGuard)
+  async resendConfirmationLink(@Req() request: RequestWithUser) {
+    await this.authService.resendConfirmationLink(request.user.id);
   }
 }

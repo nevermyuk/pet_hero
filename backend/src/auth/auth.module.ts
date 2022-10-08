@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EmailService } from '../email/email.service';
 import { User } from '../users/entities/user.entity';
@@ -14,6 +15,7 @@ import { SessionSerializer } from './utils/SessionSerializer';
   providers: [
     LocalStrategy,
     SessionSerializer,
+    JwtService,
     {
       provide: 'AUTH_SERVICE',
       useClass: AuthService,

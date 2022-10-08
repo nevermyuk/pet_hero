@@ -1,28 +1,22 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Inject,
-  Logger,
+  Body, Controller, Delete, Get, Inject,
+  Logger, Param, Patch, Post, UseGuards
 } from '@nestjs/common';
-import { PetService } from './pet.service';
+import { AuthenticatedGuard } from '../auth/utils/AuthenticatedGuard';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
+import { PetService } from './pet.service';
 
 @Controller('pets')
 export class PetController {
   private readonly logger = new Logger(PetController.name);
-  constructor(@Inject('PET_SERVICE') private readonly petService: PetService) {}
+  constructor(@Inject('PET_SERVICE') private readonly petService: PetService) { }
 
   @Post()
   create(@Body() createPetDto: CreatePetDto) {
     return this.petService.create(createPetDto);
   }
-
+  @UseGuards(AuthenticatedGuard)
   @Get()
   findAll() {
     return this.petService.findAll();
