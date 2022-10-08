@@ -17,6 +17,15 @@ export const loggerOptions: LoggerOptions = {
         },
     },
 };
+export const pinoPrettyTransport = transport({
+    target: 'pino-pretty',
+    options: {
+        colorize: true,
+        destination: 1
+    }
+
+})
+
 
 export const pinoTransport = transport({
     target: "pino-loki",
@@ -36,6 +45,6 @@ export const pinoTransport = transport({
 
 export const logger: Logger = Pino(
     loggerOptions,
-    pinoTransport
+    pinoPrettyTransport
     // destination(process.env.LOG_FILE_NAME),
 );

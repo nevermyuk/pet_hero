@@ -2,27 +2,30 @@
 # BUILD FOR LOCAL DEVELOPMENT
 ###################
 
-FROM node:16-alpine As development
+FROM node:16.17.1-bullseye-slim As development
 
 EXPOSE 5555
 
 RUN mkdir /app && chown -R node:node /app
 
-USER node
+RUN npm i -g @nestjs/cli
 
 COPY package.json package-lock.json /app/
 
-RUN cd /app && npm install
-
 WORKDIR /app
 
-COPY --chown=node:node . /app
+RUN npm i
+
+COPY --chown=node:node . .
+
+USER node
+
 
 ###################
 # BUILD FOR PRODUCTION
 ###################
 
-FROM node:16-alpine As build
+FROM node:16.17.1-bullseye-slim As build
 
 RUN mkdir /app && chown -R node:node /app
 
@@ -39,23 +42,24 @@ COPY --chown=node:node . .
 
 RUN npm run build
 
-USER node
-
-
-ENV NODE_ENV production
-
 RUN npm ci --only=production && npm cache clean --force
 
 ###################
 # PRODUCTION
 ###################
 
-FROM node:16-alpine As production
+FROM node:16.17.1-bullseye-slim As production
+RUN RUN apt-get update && apt-get install -y --no-install-recommends dumb-init
+
+ENV NODE_ENV production
+WORKDIR /app
 
 # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build /app/node_modules ./node_modules
 COPY --chown=node:node --from=build /app/dist ./dist
 
+USER node
+
 # Start the server using the production build
-CMD [ "node", "dist/main.js" ]
+CMD [ "dumb-init", "node", "dist/main.js" ]
 

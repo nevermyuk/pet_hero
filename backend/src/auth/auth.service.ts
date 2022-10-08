@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { UserDetails } from '../utils/types';
 
 import * as argon2 from 'argon2';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UsersService } from '../users/users.service';
 import LoginFailException from './exceptions/loginFail.exception';
 import UserAlreadyExistException from './exceptions/userAlreadyExist.exception';
@@ -12,7 +12,8 @@ import UserDoesNotExistException from './exceptions/userDoesNotExist.exception';
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
-  constructor(@Inject('USER_SERVICE') private usersService: UsersService) { }
+  constructor(@Inject('USER_SERVICE') private usersService: UsersService
+  ) { }
   async validateUserGoogle(details: UserDetails) {
     this.logger.debug({ details: details }, 'Validate user details');
     const user = await this.usersService.findOneByEmail(details.email);
@@ -43,7 +44,7 @@ export class AuthService {
     this.logger.log('Creating user');
     const user = await this.usersService.findOneByEmail(details.email);
     if (user) {
-      this.logger.log('User found.');
+      this.logger.log(`${details.email} already exists.`);
       throw new UserAlreadyExistException();
     } else {
       return this.usersService.create(details);

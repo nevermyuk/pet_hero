@@ -1,19 +1,9 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Delete,
-  Inject,
-  Req,
-  UseGuards,
-  Logger,
-  Catch,
+  Body, Controller, Delete, Get, Inject, Logger, Param, Post, UseGuards
 } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { AuthenticatedGuard } from '../auth/utils/AuthenticatedGuard';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UsersService } from './users.service';
 
 @UseGuards(AuthenticatedGuard)
 @Controller('users')
@@ -22,7 +12,7 @@ export class UsersController {
 
   constructor(
     @Inject('USER_SERVICE') private readonly usersService: UsersService,
-  ) {}
+  ) { }
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { extname } from 'path';
-import { StorageService } from 'src/storage/storage.service';
+import { StorageService } from '../storage/storage.service';
 import { fileMimetypeFilter } from './file-upload.utils';
 
 @Controller('media')

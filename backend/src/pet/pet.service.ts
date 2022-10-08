@@ -17,11 +17,11 @@ export class PetService {
   async seed() {
     const pets = await this.petRepository.find()
     if (pets.length === 0) {
-      this.logger.log(pets.length, 'No pets found... seeding database');
+      this.logger.log('No pets found... seeding database');
       await AppDataSource.initialize();
       await runSeeder(AppDataSource, MainSeeder);
     } else {
-      this.logger.log(pets.length, 'Pets found!');
+      this.logger.log(`${pets.length} Pets found!`);
     }
   }
   create(createPetDto: CreatePetDto) {

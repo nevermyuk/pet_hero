@@ -1,4 +1,3 @@
-import { User } from '../users/entities/user.entity';
 
 export type UserDetails = {
   email: string;
@@ -14,4 +13,9 @@ export type UpdateUserParams = {
   password: string;
 };
 
-export type Done = (err: Error, user: User) => void;
+export type EmailParams = {
+  to: string;
+  subject: string;
+  text?: string;
+  html: string;
+}

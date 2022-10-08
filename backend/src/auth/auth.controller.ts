@@ -1,18 +1,15 @@
 import {
   Body,
   Controller,
-  Get, HttpCode, Inject,
+  Get, HttpCode, HttpException, HttpStatus, Inject,
   Logger,
   Post,
-  Req,
-  Res,
-  UseGuards
+  Req, UseGuards
 } from '@nestjs/common';
 import { Request } from 'express';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { AuthService } from './auth.service';
 import LogoutFailException from './exceptions/logoutFail.exception';
-import { GoogleAuthGuard } from './utils/GoogleAuthGuard';
 import { LocalAuthGuard } from './utils/LocalAuthGuard';
 
 @Controller('auth')
@@ -22,8 +19,14 @@ export class AuthController {
   constructor(@Inject('AUTH_SERVICE') private authService: AuthService) { }
 
   @Post('register')
+  @HttpCode(204)
   async register(@Body() createUserDto: CreateUserDto) {
-    return this.authService.register(createUserDto);
+    const registration = this.authService.register(createUserDto);
+    if (registration) {
+      return "Successfully registered."
+    } else {
+      throw new HttpException('Something bad happened..', HttpStatus.REQUEST_TIMEOUT)
+    }
   }
 
   @UseGuards(LocalAuthGuard)
@@ -33,11 +36,11 @@ export class AuthController {
     return req.user
   }
 
-  @Get('google/login')
-  @UseGuards(GoogleAuthGuard)
-  handleLogin() {
-    return { msg: 'Google Authentication' };
-  }
+  // @Get('google/login')
+  // @UseGuards(GoogleAuthGuard)
+  // handleLogin() {
+  //   return { msg: 'Google Authentication' };
+  // }
 
   @Get('logout')
   async logOut(@Req() req: Request) {
@@ -50,11 +53,11 @@ export class AuthController {
   }
 
   // api/auth/google/redirect
-  @Get('google/redirect')
-  @UseGuards(GoogleAuthGuard)
-  handleRedirect(@Res() res) {
-    return res.redirect('http://localhost:3000');
-  }
+  // @Get('google/redirect')
+  // @UseGuards(GoogleAuthGuard)
+  // handleRedirect(@Res() res) {
+  //   return res.redirect('http://localhost:3000');
+  // }
 
   @Get('status')
   user(@Req() request: Request) {

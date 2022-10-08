@@ -12,6 +12,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { roles } from './auth/user-roles';
+import { EmailModule } from './email/email.module';
 import { Interest } from './interest/entities/interest.entity';
 import { InterestModule } from './interest/interest.module';
 import { LoggerModule } from './logger/logger.module';
@@ -42,7 +43,9 @@ const OpenTelemetryModuleConfig = OpenTelemetryModule.forRoot({
   imports: [
     OpenTelemetryModuleConfig,
     LoggerModule,
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     AuthModule,
     TypeOrmModule.forRootAsync({
       useFactory: (logger: PinoLogger): TypeOrmModuleOptions => {
@@ -74,6 +77,7 @@ const OpenTelemetryModuleConfig = OpenTelemetryModule.forRoot({
     StorageModule,
     MediaModule,
     InterestModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [
