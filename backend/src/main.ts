@@ -13,6 +13,12 @@ import { EntityNotFoundExceptionFilter } from './filters/entity-not-found-except
 import otelSDK from './tracing';
 import { Session } from './typeorm/entities/Session';
 
+declare module 'express-session' {
+  interface SessionData {
+    isSecondFactorAuthenticated: boolean;
+  }
+}
+
 
 
 async function bootstrap() {
@@ -53,9 +59,9 @@ async function bootstrap() {
       resave: false,
       cookie: {
         path: '/',
-        secure: process.env.ENVIRONMENT === 'PRODUCTION' ? true : true,
+        secure: process.env.ENVIRONMENT === 'PRODUCTION' ? false : false,
         httpOnly: true,
-        maxAge: 360000,
+        maxAge: 1000 * 60 * 60 * 24,
         sameSite: 'strict'
       },
       store: new TypeormStore().connect(sessionRepository),

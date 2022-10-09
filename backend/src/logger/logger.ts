@@ -1,21 +1,5 @@
-import { context, trace } from '@opentelemetry/api';
 import Pino, { Logger, LoggerOptions, transport } from 'pino';
 export const loggerOptions: LoggerOptions = {
-    level: 'info',
-    formatters: {
-        level(label) {
-            return { level: label };
-        },
-        // Workaround for PinoInstrumentation (does not support latest version yet)
-        log(object) {
-            const span = trace.getSpan(context.active());
-            if (!span) return { ...object };
-            const { spanId, traceId } = trace
-                .getSpan(context.active())
-                ?.spanContext();
-            return { ...object, spanId, traceId };
-        },
-    },
 };
 export const pinoPrettyTransport = transport({
     target: 'pino-pretty',

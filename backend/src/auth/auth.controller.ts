@@ -5,21 +5,27 @@ import {
   Get, HttpCode, Inject,
   Logger,
   Post,
-  Req, UseGuards, UseInterceptors
+  Req, Res, UnauthorizedException, UseGuards, UseInterceptors
 } from '@nestjs/common';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
+import ConfirmEmailDto from './dto/confirmEmail.dto';
+import TwoFactorAuthenticationCodeDto from './dto/twoFactorAuthenticationCode.dto';
 import LogoutFailException from './exceptions/logoutFail.exception';
-import ConfirmEmailDto from './utils/confirmEmail.dto';
+import RequestWithUser from './interface/requestWithUser.interface';
+import { AuthenticatedGuard } from './utils/AuthenticatedGuard';
 import { LocalAuthGuard } from './utils/LocalAuthGuard';
-import RequestWithUser from './utils/requestWithUser.interface';
 
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
-  constructor(@Inject('AUTH_SERVICE') private authService: AuthService) { }
+  constructor(
+    @Inject('AUTH_SERVICE') private authService: AuthService,
+    @Inject('USER_SERVICE') private readonly usersService: UsersService,
+  ) { }
 
   @Post('register')
   @HttpCode(204)
@@ -33,6 +39,7 @@ export class AuthController {
   @HttpCode(200)
   @Post('login')
   async login(@Req() req) {
+    req.session.isSecondFactorAuthenticated = false
     return req.user
   }
 
@@ -76,9 +83,53 @@ export class AuthController {
     await this.authService.confirmEmail(email);
   }
 
+  @UseGuards(AuthenticatedGuard)
   @Post('resend-confirmation-link')
-  @UseGuards(LocalAuthGuard)
   async resendConfirmationLink(@Req() request: RequestWithUser) {
     await this.authService.resendConfirmationLink(request.user.id);
   }
+
+  @Post('2fa-generate')
+  @UseGuards(AuthenticatedGuard)
+  async generateMFA(@Res() response: Response, @Req() request: RequestWithUser) {
+    const { otpauthUrl } = await this.authService.generateTwoFactorAuthenticationSecret(request.user);
+    return this.authService.pipeQrCodeStream(response, otpauthUrl);
+  }
+
+
+  @Post('turn-on')
+  @HttpCode(200)
+  @UseGuards(AuthenticatedGuard)
+  async turnOnTwoFactorAuthentication(
+    @Req() request: RequestWithUser,
+    @Body() { twoFactorAuthenticationCode }: TwoFactorAuthenticationCodeDto
+  ) {
+    const isCodeValid = this.authService.isTwoFactorAuthenticationCodeValid(
+      twoFactorAuthenticationCode, request.user
+    );
+    if (!isCodeValid) {
+      throw new UnauthorizedException('Wrong authentication code');
+    }
+    await this.usersService.turnOnTwoFactorAuthentication(request.user.id);
+  }
+
+  @Post('authenticate')
+  @HttpCode(200)
+  @UseGuards(AuthenticatedGuard)
+  async authenticate(
+    @Req() request: RequestWithUser,
+    @Body() { twoFactorAuthenticationCode }: TwoFactorAuthenticationCodeDto
+  ) {
+    const isCodeValid = this.authService.isTwoFactorAuthenticationCodeValid(
+      twoFactorAuthenticationCode, request.user
+    );
+    if (!isCodeValid) {
+      throw new UnauthorizedException('Wrong authentication code');
+    }
+    console.log(request.session.isSecondFactorAuthenticated)
+    request.session.isSecondFactorAuthenticated = true
+    return request.user;
+  }
+
+
 }

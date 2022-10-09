@@ -6,11 +6,17 @@ import { JaegerExporter } from '@opentelemetry/exporter-jaeger';
 import { PrometheusExporter } from '@opentelemetry/exporter-prometheus';
 import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
 import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
+import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino';
 import { B3InjectEncoding, B3Propagator } from '@opentelemetry/propagator-b3';
 import { JaegerPropagator } from '@opentelemetry/propagator-jaeger';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
+const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
+
 import * as process from 'process';
+
+const provider = new NodeTracerProvider();
+provider.register();
 
 const otelSDK = new NodeSDK({
     metricReader: new PrometheusExporter({
@@ -32,6 +38,12 @@ const otelSDK = new NodeSDK({
     instrumentations: [
         new ExpressInstrumentation(),
         new NestInstrumentation(),
+        new PinoInstrumentation({
+            // Optional hook to insert additional context to log object.
+            logHook: (span, record, level) => {
+                record['resource.service.name'] = provider.resource.attributes['service.name'];
+            },
+        }), new PinoInstrumentation()
     ],
 });
 

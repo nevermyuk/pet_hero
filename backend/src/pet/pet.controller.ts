@@ -1,8 +1,7 @@
 import {
   Body, Controller, Delete, Get, Inject,
-  Logger, Param, Patch, Post, UseGuards
+  Logger, Param, Patch, Post
 } from '@nestjs/common';
-import { AuthenticatedGuard } from '../auth/utils/AuthenticatedGuard';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { PetService } from './pet.service';
@@ -16,7 +15,6 @@ export class PetController {
   create(@Body() createPetDto: CreatePetDto) {
     return this.petService.create(createPetDto);
   }
-  @UseGuards(AuthenticatedGuard)
   @Get()
   findAll() {
     return this.petService.findAll();

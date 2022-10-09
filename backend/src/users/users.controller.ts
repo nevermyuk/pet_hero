@@ -1,6 +1,7 @@
 import {
   Body, Controller, Delete, Get, Inject, Logger, Param, Post, UseGuards
 } from '@nestjs/common';
+import { OTPGuard } from 'src/auth/utils/OTPGuard';
 import { AuthenticatedGuard } from '../auth/utils/AuthenticatedGuard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './users.service';
@@ -19,6 +20,7 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  @UseGuards(OTPGuard)
   @Get()
   findAll() {
     return this.usersService.findAll();

@@ -3,15 +3,20 @@ import { UserDetails } from '../utils/types';
 
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { Response } from 'express';
+import { authenticator } from 'otplib';
+import { toFileStream } from 'qrcode';
+
 import * as argon2 from 'argon2';
 import { EmailService } from '../email/email.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { EmailParams } from '../utils/types';
 import LoginFailException from './exceptions/loginFail.exception';
 import UserAlreadyExistException from './exceptions/userAlreadyExist.exception';
 import UserDoesNotExistException from './exceptions/userDoesNotExist.exception';
-import VerificationTokenPayload from './utils/verificationTokenPayload.interface';
+import VerificationTokenPayload from './interface/verificationTokenPayload.interface';
 
 @Injectable()
 export class AuthService {
@@ -119,4 +124,28 @@ export class AuthService {
     await this.sendVerificationLink(user.email);
   }
 
+
+  public async generateTwoFactorAuthenticationSecret(user: User) {
+    const secret = authenticator.generateSecret();
+
+    const otpauthUrl = authenticator.keyuri(user.email, this.configService.get('TWO_FACTOR_AUTHENTICATION_APP_NAME'), secret);
+
+    await this.usersService.setTwoFactorAuthenticationSecret(secret, user.id);
+
+    return {
+      secret,
+      otpauthUrl
+    }
+  }
+
+  public async pipeQrCodeStream(stream: Response, otpauthUrl: string) {
+    return toFileStream(stream, otpauthUrl);
+  }
+
+  public isTwoFactorAuthenticationCodeValid(twoFactorAuthenticationCode: string, user: User) {
+    return authenticator.verify({
+      token: twoFactorAuthenticationCode,
+      secret: user.twoFactorAuthenticationSecret
+    })
+  }
 }

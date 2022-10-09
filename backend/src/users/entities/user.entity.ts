@@ -27,6 +27,12 @@ export class User {
   @Column({ default: false })
   public isEmailConfirmed: boolean;
 
+  @Column({ default: false })
+  public isTwoFactorAuthenticationEnabled: boolean;
+
+  @Column({ nullable: true })
+  public twoFactorAuthenticationSecret?: string;
+
   @Column()
   createdAt: Date;
 
