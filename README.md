@@ -13,3 +13,8 @@ docker compose -f docker-compose.yml -f docker-compose-prod.yml up -d --build
 docker run -v /home/nevermyuk/pet_hero/frontend/src:/app/src:ro -d -p 3000:3000 --name pet-hero-frontend pet-hero-frontend
 
 docker run --env-file ./.env -d -p 8080:80 --name react-app docker-image-prod
+
+# Deployment stuff
+
+cd deployment
+docker compose up -d

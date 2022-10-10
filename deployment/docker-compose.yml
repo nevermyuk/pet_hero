@@ -1,0 +1,37 @@
+version: "2"
+
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - HTTPS_METHOD=nohttp
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - /home/Team-20/certs:/etc/nginx/certs
+
+  whoami:
+    image: jwilder/whoami
+    expose:
+      - "8000"
+    environment:
+      - VIRTUAL_HOST=whoami.local
+      - VIRTUAL_PORT=8000
+
+  jenkins:
+    image: jenkinsci/blueocean
+    user: root
+    environment:
+      - VIRTUAL_HOST=jenkins.pethero.homes
+      - VIRTUAL_PROTO=https
+      - VIRTUAL_PORT=8443
+      - CERT_NAME=pethero.homes
+      - "JENKINS_OPTS=--httpPort=-1 --httpsPort=8443 --httpsKeyStore=/var/jenkins_home/pethero.homes.jks --httpsKeyStorePassword=wearethetruepetheroes"
+    expose:
+      - "8443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /jenkins-data:/var/jenkins_home
+      - ${HOME}:/home

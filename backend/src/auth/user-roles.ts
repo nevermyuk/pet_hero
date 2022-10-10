@@ -3,7 +3,6 @@ import { RolesBuilder } from 'nest-access-control';
 export enum UserRoles {
   User = 'User',
   Staff = 'Staff',
-  Admin = 'Admin',
 }
 
 export const roles: RolesBuilder = new RolesBuilder();
@@ -18,7 +17,4 @@ roles
   .updateAny('interest')
   .createAny('pet')
   .updateAny('pet')
-  .grant(UserRoles.Admin)
-  .extend(UserRoles.Staff)
-  .readAny(['profile', 'user'])
-  .deleteAny(['profile', 'user']);
+

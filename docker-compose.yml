@@ -130,9 +130,6 @@ services:
     networks:
       - back-tier
 
-    networks:
-      - back-tier
-
   grafana:
     image: grafana/grafana:9.1.1-ubuntu
     volumes:

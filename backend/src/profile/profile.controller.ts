@@ -1,21 +1,13 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Inject,
-  Logger,
-  Request,
-  UseGuards,
+  Body, Controller, Delete, Get, Inject,
+  Logger, Param, Patch, Post, Request,
+  UseGuards
 } from '@nestjs/common';
-import { ProfileService } from './profile.service';
+import { ACGuard, UseRoles } from 'nest-access-control';
+import { AuthenticatedGuard } from '../auth/utils/AuthenticatedGuard';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { AuthenticatedGuard } from '../auth/utils/AuthenticatedGuard';
-import { ACGuard, UseRoles } from 'nest-access-control';
+import { ProfileService } from './profile.service';
 
 @UseGuards(AuthenticatedGuard)
 @Controller('profiles')
@@ -23,9 +15,9 @@ export class ProfileController {
   private readonly logger = new Logger(ProfileController.name);
   constructor(
     @Inject('PROFILE_SERVICE') private readonly profileService: ProfileService,
-  ) {}
+  ) { }
 
-  @Post()
+  @Post('create')
   create(@Request() req, @Body() createProfileDto: CreateProfileDto) {
     const id = req.user.id;
     return this.profileService.create(id, createProfileDto);
