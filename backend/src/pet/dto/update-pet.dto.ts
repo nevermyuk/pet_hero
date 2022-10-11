@@ -1,14 +1,10 @@
+import {
+  IsBoolean, IsEnum,
+  IsInt, IsNotEmpty, IsOptional, IsString, IsUrl
+} from 'class-validator';
 import AdoptionStatus from '../enums/adoptionStatus.enum';
 import PetGender from '../enums/petGender.enum';
-import {
-  IsString,
-  IsNotEmpty,
-  IsEnum,
-  IsInt,
-  IsBoolean,
-  IsOptional,
-  IsUrl,
-} from 'class-validator';
+import { IsValidImageUrl } from '../validation/IsValidImageUrl';
 
 export class UpdatePetDto {
   @IsOptional()
@@ -72,7 +68,11 @@ export class UpdatePetDto {
   @IsString()
   story: string;
 
+  @IsOptional()
   @IsNotEmpty()
   @IsUrl()
+  @IsValidImageUrl({
+    message: 'URL $value is not a valid image Url.',
+  })
   imageUrl: string;
 }

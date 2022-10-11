@@ -3,9 +3,9 @@ import {
   Logger, Param, Patch, Post, UseGuards
 } from '@nestjs/common';
 import { ACGuard, UseRoles } from 'nest-access-control';
-import { AppAction, AppEntity, AppPossession } from 'src/auth/app.roles';
-import { AuthenticatedGuard } from 'src/auth/utils/AuthenticatedGuard';
-import { OTPGuard } from 'src/auth/utils/OTPGuard';
+import { AppAction, AppEntity, AppPossession } from '../auth/app.roles';
+import { AuthenticatedGuard } from '../auth/utils/AuthenticatedGuard';
+import { OTPGuard } from '../auth/utils/OTPGuard';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { PetService } from './pet.service';
@@ -31,17 +31,17 @@ export class PetController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.petService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.petService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePetDto: UpdatePetDto) {
-    return this.petService.update(+id, updatePetDto);
+  update(@Param('id') id: number, @Body() updatePetDto: UpdatePetDto) {
+    return this.petService.update(id, updatePetDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.petService.remove(+id);
+  remove(@Param('id') id: number) {
+    return this.petService.remove(id);
   }
 }

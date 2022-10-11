@@ -54,7 +54,7 @@ export class ProfileController {
   @Patch(':id')
   update(@Request() req, @Param('id') id: number, @Body() updateProfileDto: UpdateProfileDto) {
     if (this.roleBuilder.can(AppRoles.USER).updateOwn('profile').granted && req.user.profileId === id) {
-      return this.profileService.update(+id, updateProfileDto);
+      return this.profileService.update(id, updateProfileDto);
     } else {
       throw new ForbiddenException();
     }

@@ -4,7 +4,7 @@ import {
   UseGuards
 } from '@nestjs/common';
 import { ACGuard, UseRoles } from 'nest-access-control';
-import { AppAction, AppEntity, AppPossession } from 'src/auth/app.roles';
+import { AppAction, AppEntity, AppPossession } from '../auth/app.roles';
 import RequestWithUser from '../auth/interface/requestWithUser.interface';
 import { AuthenticatedGuard } from '../auth/utils/AuthenticatedGuard';
 import { OTPGuard } from '../auth/utils/OTPGuard';

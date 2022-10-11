@@ -1,5 +1,5 @@
-import { ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { TypeormStore } from 'connect-typeorm/out';
@@ -40,7 +40,8 @@ async function bootstrap() {
   app.set('trust proxy', 1)
 
   app.useLogger(app.get(Logger));
-  app.useGlobalInterceptors(new LoggerErrorInterceptor());
+  app.useGlobalInterceptors(new LoggerErrorInterceptor(), new ClassSerializerInterceptor(
+    app.get(Reflector)));
   app.setGlobalPrefix('api');
   // whitelist remove any query/body/param that is not part of dto
   // transform query of request
@@ -55,13 +56,13 @@ async function bootstrap() {
 
   app.use(
     session({
-      secret: 'lhasdklashjdkasdhja12po893hsjnxc',
+      secret: process.env.SESSION_SECRET,
       proxy: true,
       saveUninitialized: false,
       resave: false,
       cookie: {
         path: '/',
-        secure: process.env.ENVIRONMENT === 'PRODUCTION' ? false : false,
+        secure: process.env.NODE_ENV === 'development' ? false : false,
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24,
         sameSite: 'strict'

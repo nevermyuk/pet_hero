@@ -24,7 +24,7 @@ export class PetService {
       this.logger.log(`${pets.length} Pets found!`);
     }
   }
-  
+
   create(createPetDto: CreatePetDto) {
     const newPet = this.petRepository.create({
       ...createPetDto,
@@ -38,11 +38,12 @@ export class PetService {
     return pets.map(({ story, ...keepAttr }) => keepAttr);
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
     return this.petRepository.findOneBy({ id });
   }
 
-  update(id: number, updatePetDto: UpdatePetDto) {
+  async update(id: number, updatePetDto: UpdatePetDto) {
+    await this.petRepository.findOneByOrFail({ id });
     return this.petRepository.update({ id }, { ...updatePetDto });
   }
 

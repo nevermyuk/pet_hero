@@ -16,10 +16,13 @@ import { EmailParams } from '../utils/types';
 import LoginFailException from './exceptions/loginFail.exception';
 import UserAlreadyExistException from './exceptions/userAlreadyExist.exception';
 import UserDoesNotExistException from './exceptions/userDoesNotExist.exception';
+import ResetTokenPayload from './interface/resetTokenPayload.interface';
 import VerificationTokenPayload from './interface/verificationTokenPayload.interface';
 
 @Injectable()
 export class AuthService {
+
+
   private readonly logger = new Logger(AuthService.name);
 
   constructor(@Inject('USER_SERVICE') private usersService: UsersService,
@@ -148,4 +151,50 @@ export class AuthService {
       secret: user.twoFactorAuthenticationSecret
     })
   }
+
+
+  async sendResetLink(email: string) {
+    const user = await this.usersService.findOneByEmail(email);
+    const secret = this.configService.get('JWT_RESET_TOKEN_SECRET') + user.password
+
+    const payload: ResetTokenPayload = { email };
+    const token = this.jwtService.sign(payload, {
+      secret: secret,
+      expiresIn: '15m'
+    });
+
+    const url = `${this.configService.get('EMAIL_RESET_URL')}/${user.id}/?token=${token}`;
+
+    console.log(url)
+    const text = `Forgot your password? Click here: <a href="${url}">Reset Email</a>`;
+
+    const mail: EmailParams = {
+      to: email,
+      subject: 'Pet Hero 🐶 Password Reset',
+      html: `<h1>Pet Hero</h1>
+      <p>${text}</p>
+      <p>${url}</p>`,
+    };
+    return this.emailService.send(mail)
+  }
+
+  public async decodeResetToken(id: number, token: string) {
+    try {
+      const user = await this.usersService.findOne(id);
+      const secret = this.configService.get('JWT_RESET_TOKEN_SECRET') + user.password
+      const payload = await this.jwtService.verify(token, {
+        secret: secret,
+      });
+      if (typeof payload === 'object' && 'email' in payload) {
+        return payload.email;
+      }
+      throw new BadRequestException();
+    } catch (error) {
+      if (error?.name === 'TokenExpiredError') {
+        throw new BadRequestException('Reset password token expired');
+      }
+      throw new BadRequestException('Bad token');
+    }
+  }
+
 }

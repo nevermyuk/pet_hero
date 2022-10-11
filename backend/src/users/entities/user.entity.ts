@@ -1,3 +1,4 @@
+import { Expose } from 'class-transformer';
 import {
   Column,
   Entity,
@@ -13,9 +14,11 @@ import { Profile } from '../../profile/entities/profile.entity';
 @Entity({ name: 'users' })
 export class User {
   @PrimaryGeneratedColumn()
+  @Expose()
   id: number;
 
   @Column({ unique: true })
+  @Expose()
   email: string;
 
   @Column({
@@ -25,9 +28,11 @@ export class User {
   password: string;
 
   @Column({ default: false })
+  @Expose()
   public isEmailConfirmed: boolean;
 
   @Column({ default: false })
+  @Expose()
   public isTwoFactorAuthenticationEnabled: boolean;
 
   @Column({ nullable: true })
@@ -37,9 +42,11 @@ export class User {
   createdAt: Date;
 
   @Column({ type: 'enum', enum: AppRoles, default: AppRoles.USER })
+  @Expose()
   roles: AppRoles;
 
   @Column({ nullable: true })
+  @Expose()
   profileId: number;
 
   @OneToOne(type => Profile)

@@ -3,15 +3,15 @@ import {
   ClassSerializerInterceptor,
   Controller,
   Get, HttpCode, Inject,
-  Logger,
-  Post,
-  Req, Res, UnauthorizedException, UseGuards, UseInterceptors
+  Logger, Param, Post, Req, Res, SerializeOptions, UnauthorizedException, UseGuards, UseInterceptors
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import ConfirmEmailDto from './dto/confirmEmail.dto';
+import ForgotPasswordDto from './dto/forgotPassword.dto';
+import ResetPasswordDto from './dto/resetPassword.dto';
 import TwoFactorAuthenticationCodeDto from './dto/twoFactorAuthenticationCode.dto';
 import LogoutFailException from './exceptions/logoutFail.exception';
 import RequestWithUser from './interface/requestWithUser.interface';
@@ -27,6 +27,9 @@ export class AuthController {
     @Inject('USER_SERVICE') private readonly usersService: UsersService,
   ) { }
 
+  @SerializeOptions({
+    strategy: 'excludeAll'
+  })
   @Post('register')
   @HttpCode(204)
   async register(@Body() createUserDto: CreateUserDto) {
@@ -35,22 +38,18 @@ export class AuthController {
     return user
   }
 
+  @SerializeOptions({
+    strategy: 'excludeAll'
+  })
   @UseGuards(LocalAuthGuard)
   @HttpCode(200)
   @Post('login')
-  async login(@Req() req) {
+  async login(@Req() req: RequestWithUser) {
     req.session.isSecondFactorAuthenticated = false
     return req.user
   }
 
-  // @Get('google/login')
-  // @UseGuards(GoogleAuthGuard)
-  // handleLogin() {
-  //   return { msg: 'Google Authentication' };
-  // }
-
   @Get('logout')
-
   async logOut(@Req() req: Request) {
     req.logout((err) => {
       if (err) {
@@ -60,12 +59,25 @@ export class AuthController {
     req.session.cookie.maxAge = 0;
   }
 
-  // api/auth/google/redirect
-  // @Get('google/redirect')
-  // @UseGuards(GoogleAuthGuard)
-  // handleRedirect(@Res() res) {
-  //   return res.redirect('http://localhost:3000');
+  @Post('forgot-password')
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    this.authService.sendResetLink(forgotPasswordDto.email)
+    return { "msg": 'The reset password link is sent to your email.' };
+  }
+
+  // @Get('reset-password/:id')
+  // async decodeForgotToken(@Param('id') id: number, @Body() resetPasswordDto: ResetPasswordDto) {
+  //   const email = await this.authService.decodeResetToken(id, resetPasswordDto.token);
+  //   return email;
   // }
+
+  @Post('reset-password/:id')
+  async resetPassword(@Param('id') id: number, @Body() resetPasswordDto: ResetPasswordDto) {
+    const email = await this.authService.decodeResetToken(id, resetPasswordDto.token);
+    await this.usersService.updatePassword(email, resetPasswordDto.password)
+    return { "msg": `Token is ${resetPasswordDto.token} Lets reset ${resetPasswordDto.password} 2nd: ${resetPasswordDto.confirmPassword}` };
+  }
+
 
   @Get('status')
   user(@Req() request: Request) {
@@ -114,6 +126,9 @@ export class AuthController {
     await this.usersService.turnOnTwoFactorAuthentication(request.user.id);
   }
 
+  @SerializeOptions({
+    strategy: 'excludeAll'
+  })
   @Post('authenticate')
   @HttpCode(200)
   @UseGuards(AuthenticatedGuard)
@@ -127,7 +142,6 @@ export class AuthController {
     if (!isCodeValid) {
       throw new UnauthorizedException('Wrong authentication code');
     }
-    console.log(request.session.isSecondFactorAuthenticated)
     request.session.isSecondFactorAuthenticated = true
     return request.user;
   }

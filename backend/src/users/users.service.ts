@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as argon2 from 'argon2';
 import { Repository } from 'typeorm';
@@ -39,9 +39,7 @@ export class UsersService {
     return this.userRepository.findOneBy({ email });
   }
 
-  // update(id: number, updateUserDto: UpdateUserDto) {
-  //   return `This action updates a #${id} user`;
-  // }
+
 
   async remove(id: number) {
     await this.userRepository.findOneByOrFail({ id });
@@ -63,6 +61,22 @@ export class UsersService {
   async turnOnTwoFactorAuthentication(userId: number) {
     return this.userRepository.update(userId, {
       isTwoFactorAuthenticationEnabled: true
+    });
+  }
+
+  async updatePassword(email: string, password: string) {
+    const user = await this.findOneByEmail(email)
+    if (!user) {
+      throw new BadRequestException();
+    }
+    if (await argon2.verify(user.password, password)) {
+      // password match
+      throw new BadRequestException("Your new password cannot be the same as your old password");
+    }
+    const newPassword = await argon2.hash(password);
+
+    return this.userRepository.update(user.id, {
+      password: newPassword
     });
   }
 }
