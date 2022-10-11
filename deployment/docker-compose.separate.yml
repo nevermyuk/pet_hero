@@ -2,7 +2,7 @@ version: "3"
 
 services:
   nginx:
-    image: owasp/modsecurity-crs:3.3.4-nginx-alpine-202209221209
+    image: nginx
     container_name: nginx
     ports:
       - "80:80"
