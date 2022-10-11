@@ -51,12 +51,12 @@ const OpenTelemetryModuleConfig = OpenTelemetryModule.forRoot({
       useFactory: (logger: PinoLogger): TypeOrmModuleOptions => {
         logger.setContext('DbModule');
         return {
-          type: process.env.PG_DB_TYPE as 'postgres',
-          host: process.env.PG_DB_HOST,
-          port: Number.parseInt(process.env.PG_DB_PORT),
-          username: process.env.PG_DB_USER,
-          password: process.env.PG_DB_PASS,
-          database: process.env.PG_DB_NAME,
+          type: process.env.POSTGRES_TYPE as 'postgres',
+          host: process.env.POSTGRES_HOST,
+          port: Number.parseInt(process.env.POSTGRES_PORT),
+          username: process.env.POSTGRES_USER,
+          password: process.env.POSTGRES_PASSWORD,
+          database: process.env.POSTGRES_NAME,
           autoLoadEntities: true,
           synchronize: true,
           entities: [User, Session, Profile, Pet, Interest],

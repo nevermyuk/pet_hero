@@ -2,12 +2,12 @@ declare namespace NodeJS {
   export interface ProcessEnv {
     PORT?: string;
 
-    PG_HOST?: string;
-    PG_PORT?: string;
+    POSTGRES_HOST?: string;
+    POSTGRES_PORT?: string;
     POSTGRES_USER?: string;
     POSTGRES_PASSWORD?: string;
-    PG_NAME?: string;
-    PG_TYPE?: string;
+    POSTGRES_NAME?: string;
+    POSTGRES_TYPE?: string;
 
     GOOGLE_STORAGE_PROJECT_ID?: string;
     GOOGLE_STORAGE_PRIVATE_KEY?: string;
