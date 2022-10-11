@@ -6,7 +6,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn
 } from 'typeorm';
-import { UserRoles } from '../../auth/user-roles';
+import { AppRoles } from '../../auth/app.roles';
 import { Interest } from '../../interest/entities/interest.entity';
 import { Profile } from '../../profile/entities/profile.entity';
 
@@ -36,8 +36,8 @@ export class User {
   @Column()
   createdAt: Date;
 
-  @Column({ type: 'enum', enum: UserRoles, default: UserRoles.User })
-  roles: UserRoles;
+  @Column({ type: 'enum', enum: AppRoles, default: AppRoles.USER })
+  roles: AppRoles;
 
   @Column({ nullable: true })
   profileId: number;

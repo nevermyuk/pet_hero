@@ -7,7 +7,7 @@ export class CreateUserDto {
   email: string;
 
   @IsPasswordValid()
-  @MinLength(10)
+  @MinLength(8)
   @MaxLength(50)
   password: string;
 }

@@ -42,7 +42,9 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
   app.useGlobalInterceptors(new LoggerErrorInterceptor());
   app.setGlobalPrefix('api');
-  app.useGlobalPipes(new ValidationPipe());
+  // whitelist remove any query/body/param that is not part of dto
+  // transform query of request
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new EntityNotFoundExceptionFilter());
 
   const PORT = process.env.PORT || 5555;
