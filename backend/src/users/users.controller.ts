@@ -1,7 +1,7 @@
 import { Controller, Get, Inject, Logger, Req, SerializeOptions, UseGuards } from '@nestjs/common';
 import RequestWithUser from 'src/auth/interface/requestWithUser.interface';
-import { AuthenticatedGuard } from '../auth/utils/AuthenticatedGuard';
-import { OTPGuard } from '../auth/utils/OTPGuard';
+import { AuthenticatedGuard } from '../auth/utils/Authenticated.guard';
+import { OTPGuard } from '../auth/utils/OTP.guard';
 import { UsersService } from './users.service';
 
 @UseGuards(AuthenticatedGuard, OTPGuard)

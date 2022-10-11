@@ -6,8 +6,8 @@ import {
 import { ACGuard, UseRoles } from 'nest-access-control';
 import { AppAction, AppEntity, AppPossession } from '../auth/app.roles';
 import RequestWithUser from '../auth/interface/requestWithUser.interface';
-import { AuthenticatedGuard } from '../auth/utils/AuthenticatedGuard';
-import { OTPGuard } from '../auth/utils/OTPGuard';
+import { AuthenticatedGuard } from '../auth/utils/Authenticated.guard';
+import { OTPGuard } from '../auth/utils/OTP.guard';
 import { CreateInterestDto } from './dto/create-interest.dto';
 import { InterestService } from './interest.service';
 

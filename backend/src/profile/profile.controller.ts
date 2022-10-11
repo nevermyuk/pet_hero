@@ -5,8 +5,8 @@ import {
 } from '@nestjs/common';
 import { ACGuard, InjectRolesBuilder, RolesBuilder, UseRoles } from 'nest-access-control';
 import { AppAction, AppEntity, AppPossession, AppRoles } from '../auth/app.roles';
-import { AuthenticatedGuard } from '../auth/utils/AuthenticatedGuard';
-import { OTPGuard } from '../auth/utils/OTPGuard';
+import { AuthenticatedGuard } from '../auth/utils/Authenticated.guard';
+import { OTPGuard } from '../auth/utils/OTP.guard';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfileService } from './profile.service';

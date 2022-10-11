@@ -15,8 +15,8 @@ import ResetPasswordDto from './dto/resetPassword.dto';
 import TwoFactorAuthenticationCodeDto from './dto/twoFactorAuthenticationCode.dto';
 import LogoutFailException from './exceptions/logoutFail.exception';
 import RequestWithUser from './interface/requestWithUser.interface';
-import { AuthenticatedGuard } from './utils/AuthenticatedGuard';
-import { LocalAuthGuard } from './utils/LocalAuthGuard';
+import { AuthenticatedGuard } from './utils/Authenticated.guard';
+import { LocalAuthGuard } from './utils/LocalAuth.guard';
 
 @Controller('auth')
 export class AuthController {
