@@ -3,10 +3,15 @@ import {
   Get, Inject, Param, Patch, Post, Request,
   UseGuards
 } from '@nestjs/common';
+import { ACGuard, UseRoles } from 'nest-access-control';
+import { AppAction, AppEntity, AppPossession } from 'src/auth/app.roles';
+import RequestWithUser from '../auth/interface/requestWithUser.interface';
 import { AuthenticatedGuard } from '../auth/utils/AuthenticatedGuard';
+import { OTPGuard } from '../auth/utils/OTPGuard';
 import { CreateInterestDto } from './dto/create-interest.dto';
 import { InterestService } from './interest.service';
 
+@UseGuards(AuthenticatedGuard, OTPGuard, ACGuard)
 @Controller('interests')
 export class InterestController {
   constructor(
@@ -14,9 +19,13 @@ export class InterestController {
     private readonly interestService: InterestService,
   ) { }
 
-  @UseGuards(AuthenticatedGuard)
-  @Post()
-  create(@Request() req, @Body() createInterestDto: CreateInterestDto) {
+  @UseRoles({
+    resource: AppEntity.INTEREST,
+    action: AppAction.CREATE,
+    possession: AppPossession.ANY,
+  })
+  @Post('create')
+  create(@Request() req: RequestWithUser, @Body() createInterestDto: CreateInterestDto) {
     const user = req.user;
     if (!user) {
       throw new BadRequestException();
@@ -24,23 +33,44 @@ export class InterestController {
     return this.interestService.create(user, createInterestDto);
   }
 
+  @UseRoles({
+    resource: AppEntity.INTEREST,
+    action: AppAction.READ,
+    possession: AppPossession.ANY,
+  })
   @Get()
   findAll() {
     return this.interestService.findAll();
   }
 
+  @Get('user/:id')
+  findUserInterests(@Param('id') id: number) {
+    return this.interestService.findAll();
+  }
+
+  @UseRoles({
+    resource: AppEntity.INTEREST,
+    action: AppAction.READ,
+    possession: AppPossession.ANY,
+  })
+
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    const interest = this.interestService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    const interest = this.interestService.findOne(id);
     if (interest === null)
       throw new BadRequestException('Interest does not exist');
 
     return interest;
   }
 
+  @UseRoles({
+    resource: AppEntity.INTEREST,
+    action: AppAction.UPDATE,
+    possession: AppPossession.ANY,
+  })
   @Patch(':id')
-  update(@Param('id') id: string) {
-    return this.interestService.update(+id);
+  update(@Param('id') id: number) {
+    return this.interestService.update(id);
   }
 
   // @Delete(':id')

@@ -4,7 +4,7 @@ import {
   UseGuards
 } from '@nestjs/common';
 import { ACGuard, InjectRolesBuilder, RolesBuilder, UseRoles } from 'nest-access-control';
-import { AppRoles } from '../auth/app.roles';
+import { AppAction, AppEntity, AppPossession, AppRoles } from '../auth/app.roles';
 import { AuthenticatedGuard } from '../auth/utils/AuthenticatedGuard';
 import { OTPGuard } from '../auth/utils/OTPGuard';
 import { CreateProfileDto } from './dto/create-profile.dto';
@@ -21,9 +21,9 @@ export class ProfileController {
   ) { }
 
   @UseRoles({
-    resource: 'profile',
-    action: 'create',
-    possession: 'any',
+    resource: AppEntity.PROFILE,
+    action: AppAction.CREATE,
+    possession: AppPossession.ANY,
   })
   @Post('create')
   create(@Request() req, @Body() createProfileDto: CreateProfileDto) {
@@ -32,9 +32,9 @@ export class ProfileController {
   }
 
   @UseRoles({
-    resource: 'profile',
-    action: 'read',
-    possession: 'any',
+    resource: AppEntity.PROFILE,
+    action: AppAction.READ,
+    possession: AppPossession.ANY,
   })
   @Get()
   findAll() {

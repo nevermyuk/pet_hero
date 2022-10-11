@@ -10,7 +10,7 @@ export function fileMimetypeFilter(...mimetypes: string[]) {
 
     if (
       mimetypes.some((m) => file.mimetype.includes(m)) &&
-      file.originalname.match(/\.(jpg|jpeg|png|gif)$/)
+      file.originalname.match(/\.(jpe?g|png)$/i)
     ) {
       callback(null, true);
     } else {

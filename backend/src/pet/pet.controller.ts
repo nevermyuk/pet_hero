@@ -1,7 +1,11 @@
 import {
   Body, Controller, Delete, Get, Inject,
-  Logger, Param, Patch, Post
+  Logger, Param, Patch, Post, UseGuards
 } from '@nestjs/common';
+import { ACGuard, UseRoles } from 'nest-access-control';
+import { AppAction, AppEntity, AppPossession } from 'src/auth/app.roles';
+import { AuthenticatedGuard } from 'src/auth/utils/AuthenticatedGuard';
+import { OTPGuard } from 'src/auth/utils/OTPGuard';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { PetService } from './pet.service';
@@ -11,12 +15,12 @@ export class PetController {
   private readonly logger = new Logger(PetController.name);
   constructor(@Inject('PET_SERVICE') private readonly petService: PetService) { }
 
-  // @UseGuards(AuthenticatedGuard, OTPGuard, ACGuard)
-  // @UseRoles({
-  //   resource: 'pets',
-  //   action: 'create',
-  //   possession: 'any',
-  // })
+  @UseGuards(AuthenticatedGuard, OTPGuard, ACGuard)
+  @UseRoles({
+    resource: AppEntity.PETS,
+    action: AppAction.CREATE,
+    possession: AppPossession.ANY,
+  })
   @Post('create')
   create(@Body() createPetDto: CreatePetDto) {
     return this.petService.create(createPetDto);

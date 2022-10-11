@@ -1,6 +1,7 @@
 import {
-  Controller,
-  Logger,
+  Controller, Logger,
+  MaxFileSizeValidator,
+  ParseFilePipe,
   Post,
   UploadedFile,
   UseInterceptors
@@ -15,9 +16,9 @@ export class MediaController {
   private readonly logger = new Logger(MediaController.name);
   constructor(private storageService: StorageService) { }
 
-  @Post()
+  @Post('upload')
   @UseInterceptors(
-    FileInterceptor('image', {
+    FileInterceptor('file', {
       limits: {
         files: 1,
         fileSize: 1024 * 1024,
@@ -25,8 +26,12 @@ export class MediaController {
       fileFilter: fileMimetypeFilter('image'),
     }),
   )
-  async uploadMedia(@UploadedFile() file: Express.Multer.File) {
-    this.logger.log({ fileName: file.filename }, 'Validating Image Upload');
+  async uploadMedia(@UploadedFile(new ParseFilePipe({
+    validators: [
+      new MaxFileSizeValidator({ maxSize: 1024 * 1024 }),
+    ],
+  }),) file: Express.Multer.File) {
+    this.logger.log(file.filename);
     const name = file.originalname.split('.')[0];
     const fileExtName = extname(file.originalname);
     const randomName = Array(4)
