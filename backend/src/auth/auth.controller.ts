@@ -50,6 +50,7 @@ export class AuthController {
   // }
 
   @Get('logout')
+
   async logOut(@Req() req: Request) {
     req.logout((err) => {
       if (err) {

@@ -1,5 +1,5 @@
 import {
-  Body, Controller, Delete, ForbiddenException, Get, Inject,
+  Body, Controller, ForbiddenException, Get, Inject,
   Logger, Param, Patch, Post, Request,
   UseGuards
 } from '@nestjs/common';
@@ -50,18 +50,18 @@ export class ProfileController {
     }
   }
 
-  @UseRoles({
-    resource: 'profile',
-    action: 'update',
-    possession: 'own',
-  })
+
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProfileDto: UpdateProfileDto) {
-    return this.profileService.update(+id, updateProfileDto);
+  update(@Request() req, @Param('id') id: number, @Body() updateProfileDto: UpdateProfileDto) {
+    if (this.roleBuilder.can(AppRoles.USER).updateOwn('profile').granted && req.user.profileId === id) {
+      return this.profileService.update(+id, updateProfileDto);
+    } else {
+      throw new ForbiddenException();
+    }
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.profileService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.profileService.remove(+id);
+  // }
 }

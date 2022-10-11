@@ -1,18 +1,15 @@
+import {
+  IsBoolean, IsEnum,
+  IsInt, IsNotEmpty, IsString, IsUrl
+} from 'class-validator';
 import AdoptionStatus from '../enums/adoptionStatus.enum';
 import PetGender from '../enums/petGender.enum';
-import {
-  IsString,
-  IsNotEmpty,
-  IsEnum,
-  IsInt,
-  IsBoolean,
-  IsUrl,
-} from 'class-validator';
+import { IsValidImageUrl } from '../validation/IsValidImageUrl';
 export class CreatePetDto {
   @IsNotEmpty()
   @IsString()
   name: string;
-  
+
   @IsNotEmpty()
   @IsString()
   species: string;
@@ -60,5 +57,8 @@ export class CreatePetDto {
 
   @IsNotEmpty()
   @IsUrl()
+  @IsValidImageUrl({
+    message: 'URL $value is not a valid image Url.',
+  })
   imageUrl: string;
 }

@@ -11,7 +11,13 @@ export class PetController {
   private readonly logger = new Logger(PetController.name);
   constructor(@Inject('PET_SERVICE') private readonly petService: PetService) { }
 
-  @Post()
+  // @UseGuards(AuthenticatedGuard, OTPGuard, ACGuard)
+  // @UseRoles({
+  //   resource: 'pets',
+  //   action: 'create',
+  //   possession: 'any',
+  // })
+  @Post('create')
   create(@Body() createPetDto: CreatePetDto) {
     return this.petService.create(createPetDto);
   }

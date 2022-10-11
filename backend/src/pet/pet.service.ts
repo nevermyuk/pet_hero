@@ -24,6 +24,7 @@ export class PetService {
       this.logger.log(`${pets.length} Pets found!`);
     }
   }
+  
   create(createPetDto: CreatePetDto) {
     const newPet = this.petRepository.create({
       ...createPetDto,
