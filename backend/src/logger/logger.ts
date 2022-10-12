@@ -26,10 +26,7 @@ export const pinoTransport = transport({
         batching: true,
         interval: 5,
         host: "http://host.docker.internal:3100",
-        basicAuth: {
-            username: "username",
-            password: "password",
-        },
+        basicAuth: false,
         labels: {
             application: "pet-hero-backend",
             job: "backend"
