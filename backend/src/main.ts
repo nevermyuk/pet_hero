@@ -31,7 +31,7 @@ async function bootstrap() {
   app.use(helmet());
 
   const corsOptions = {
-    origin: 'http://localhost',
+    origin: process.env.FRONT_APP_URL,
     credentials: true,            //access-control-allow-credentials:true
     optionSuccessStatus: 200
   }
@@ -54,6 +54,10 @@ async function bootstrap() {
     .getDataSource()
     .getRepository(Session);
 
+  sessionStore = new TypeormStore({
+    cleanupLimit: 2,
+  }).connect(sessionRepository)
+
   app.use(
     session({
       secret: process.env.SESSION_SECRET,
@@ -62,12 +66,12 @@ async function bootstrap() {
       resave: false,
       cookie: {
         path: '/',
-        secure: process.env.NODE_ENV === 'development' ? false : false,
+        secure: process.env.NODE_ENV === "production",
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24,
         sameSite: 'strict'
       },
-      store: new TypeormStore().connect(sessionRepository),
+      store: sessionStore
     }),
   );
 
@@ -75,15 +79,20 @@ async function bootstrap() {
   app.use(passport.session());
 
 
-  const config = new DocumentBuilder()
-    .setTitle('Pet Hero')
-    .setDescription('Pet Hero API')
-    .setVersion('1.0')
-    .addTag('PetHero')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  if (process.env.NODE_ENV !== "production") {
+    const config = new DocumentBuilder()
+      .setTitle('Pet Hero')
+      .setDescription('Pet Hero API')
+      .setVersion('1.0')
+      .addTag('PetHero')
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
+  }
 
   await app.listen(PORT, () => console.log(`Running on Port ${PORT}`));
 }
+
+export let sessionStore: TypeormStore;
+
 bootstrap();

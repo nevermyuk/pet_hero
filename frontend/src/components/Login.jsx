@@ -27,7 +27,7 @@ export default function Login() {
   //Handle Login API Integration here
   const authenticateUser = () => {
     axios
-      .post(`${process.env.REACT_APP_API_URL}/api/auth/login`, {
+      .post(`${process.env.REACT_APP_API_URL}/auth/login`, {
         email: loginState.email,
         password: loginState.password,
       })

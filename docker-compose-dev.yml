@@ -12,6 +12,7 @@ services:
       OTEL_SERVICE_NAME: pet-hero
       OTEL_EXPORTER_JAEGER_ENDPOINT: http://tempo:14268/api/traces
       LOG_FILE_NAME: /app/logs/pet-hero.log
+      FRONT_APP_URL: http://localhost
     logging:
       driver: loki
       options:
@@ -35,12 +36,13 @@ services:
       - "5432:5432"
     volumes:
       - pet-hero-postgres:/var/lib/postgresql/data
+
   frontend:
     build:
       dockerfile: Dockerfile.dev
       context: ./frontend
-    env_file:
-      - ./frontend/.env
+    environment:
+      REACT_APP_API_URL: "http://localhost/api"
     volumes:
       - ./frontend/src:/app/src
     ports:

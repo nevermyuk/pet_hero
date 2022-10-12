@@ -6,6 +6,7 @@ import {
   Logger, Param, Post, Req, Res, SerializeOptions, UnauthorizedException, UseGuards, UseInterceptors
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { sessionStore } from '../main';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
@@ -38,18 +39,27 @@ export class AuthController {
     return user
   }
 
-  @SerializeOptions({
-    strategy: 'excludeAll'
-  })
+
   @UseGuards(LocalAuthGuard)
   @HttpCode(200)
   @Post('login')
-  async login(@Req() req: RequestWithUser) {
-    req.session.isSecondFactorAuthenticated = false
-    return req.user
+  async login(@Req() request: RequestWithUser) {
+    // destroy all old sessions
+    sessionStore.all(async (error, result) => {
+      if (!error) {
+        result.filter(sess =>
+          sess.passport.user === request.user.id
+        ).map(sess => {
+          if (sess.id !== request.session.id) sessionStore.destroy(sess.id)
+        })
+      }
+    })
+    request.session.isSecondFactorAuthenticated = false
+    return { 'otp': request.session.isSecondFactorAuthenticated }
   }
 
   @Get('logout')
+  @HttpCode(200)
   async logOut(@Req() req: Request) {
     req.logout((err) => {
       if (err) {
@@ -60,6 +70,7 @@ export class AuthController {
   }
 
   @Post('forgot-password')
+  @HttpCode(200)
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     this.authService.sendResetLink(forgotPasswordDto.email)
     return { "msg": 'The reset password link is sent to your email.' };
@@ -72,6 +83,7 @@ export class AuthController {
   // }
 
   @Post('reset-password/:id')
+  @HttpCode(200)
   async resetPassword(@Param('id') id: number, @Body() resetPasswordDto: ResetPasswordDto) {
     const email = await this.authService.decodeResetToken(id, resetPasswordDto.token);
     await this.usersService.updatePassword(email, resetPasswordDto.password)
@@ -91,6 +103,7 @@ export class AuthController {
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Post('confirm-email')
+  @HttpCode(201)
   async confirm(@Body() confirmationData: ConfirmEmailDto) {
     const email = await this.authService.decodeConfirmationToken(confirmationData.token);
     await this.authService.confirmEmail(email);

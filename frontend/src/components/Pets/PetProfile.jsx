@@ -14,7 +14,7 @@ const PetProfile = () => {
       setLoading(true);
       try {
         const { data: response } = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/pets/${id}`
+          `${process.env.REACT_APP_API_URL}/pets/${id}`
         );
         setProfile(response);
       } catch (error) {

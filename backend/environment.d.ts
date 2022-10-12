@@ -25,5 +25,7 @@ declare namespace NodeJS {
 
     TWO_FACTOR_AUTHENTICATION_APP_NAME?: string;
 
+    NODE_ENV?: string;
+
   }
 }

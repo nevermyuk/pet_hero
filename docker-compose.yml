@@ -43,8 +43,6 @@ services:
     build:
       dockerfile: Dockerfile.dev
       context: ./frontend
-    env_file:
-      - ./frontend/.env
     volumes:
       - ./frontend/src:/app/src
     ports:

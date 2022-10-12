@@ -1,11 +1,12 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as argon2 from 'argon2';
 import { Repository } from 'typeorm';
-import { CreateUserParams } from '../utils/types';
+import { CreateUserParams, EmailParams } from '../utils/types';
 import { User } from './entities/user.entity';
 
 import { plainToInstance } from 'class-transformer';
+import { EmailService } from '../email/email.service';
 import { SerializedUser } from './types';
 @Injectable()
 export class UsersService {
@@ -13,6 +14,7 @@ export class UsersService {
 
   constructor(
     @InjectRepository(User) readonly userRepository: Repository<User>,
+    @Inject('EMAIL_SERVICE') private readonly emailService: EmailService,
   ) { }
   async create(userDetails: CreateUserParams) {
 
@@ -75,8 +77,22 @@ export class UsersService {
     }
     const newPassword = await argon2.hash(password);
 
-    return this.userRepository.update(user.id, {
+    await this.userRepository.update(user.id, {
       password: newPassword
     });
+
+    const text = `Your password has just been changed.`;
+
+    const mail: EmailParams = {
+      to: email,
+      subject: 'Pet Hero 🐶 Password Change',
+      html: `<h1>Pet Hero</h1>
+      <p>${text}</p>
+      `,
+    };
+
+    await this.emailService.send(mail)
+
+    return { "msg": "Successfully updated" }
   }
 }
