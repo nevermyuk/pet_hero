@@ -31,7 +31,7 @@ async function bootstrap() {
   app.use(helmet());
 
   const corsOptions = {
-    origin: process.env.FRONT_APP_URL,
+    origin: [process.env.FRONT_APP_URL],
     credentials: true,            //access-control-allow-credentials:true
     optionSuccessStatus: 200
   }
@@ -44,7 +44,6 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new LoggerErrorInterceptor(), new ClassSerializerInterceptor(
     app.get(Reflector)));
-  app.setGlobalPrefix('api');
   // whitelist remove any query/body/param that is not part of dto
   // transform query of request
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));

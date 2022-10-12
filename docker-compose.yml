@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3.9"
 services:
   backend:
     container_name: backend
@@ -6,12 +6,13 @@ services:
       dockerfile: Dockerfile
       context: "./backend"
       # Only will build development stage from our dockerfile
-    volumes:
-      - ./backend:/app
     environment:
       OTEL_SERVICE_NAME: pet-hero
       OTEL_EXPORTER_JAEGER_ENDPOINT: http://tempo:14268/api/traces
       LOG_FILE_NAME: /app/logs/pet-hero.log
+      VIRTUAL_HOST: api.pethero.test
+      VIRTUAL_PROTO: http
+      VIRTUAL_PORT: 5555
     logging:
       driver: loki
       options:
@@ -20,22 +21,16 @@ services:
       - ./backend/.env
     depends_on:
       - postgres
-    # Run a command against the development stage of the image
-    command: npm run start:dev
-    ports:
-      - 5555
-      - 8081
     networks:
       - back-tier
 
   postgres:
     container_name: postgres
     image: "postgres:14-alpine"
-    restart: always
     env_file:
       - ./backend/.env
     expose:
-      - "5432:5432"
+      - 5432:5432
     volumes:
       - pet-hero-postgres:/var/lib/postgresql/data
     networks:
@@ -46,10 +41,11 @@ services:
     build:
       dockerfile: Dockerfile.dev
       context: ./frontend
-    volumes:
-      - ./frontend/src:/app/src
-    ports:
-      - "3000"
+    environment:
+      VIRTUAL_HOST: pethero.test
+      VIRTUAL_PROTO: http
+      VIRTUAL_PORT: 3333
+      PORT: 3333
     networks:
       - front-tier
 
@@ -64,7 +60,7 @@ services:
     ports:
       - "14268" # jaeger ingest, Jaeger - Thrift HTTP
       - "14250" # Jaeger - GRPC
-      - "3200" #tempo
+      - "3200:3200" #tempo
       - "55680" # OpenTelemetry
       - "6831/udp" # Jaeger - Thrift Compact
       - "6832/udp" # Jaeger - Thrift Binary
@@ -80,7 +76,7 @@ services:
     image: grafana/loki:2.6.1
     command: -config.file=/etc/loki/loki-local.yaml
     ports:
-      - "3100" # loki needs to be exposed so it receives logs
+      - 3100:3100 # loki needs to be exposed so it receives logs
     environment:
       - JAEGER_AGENT_HOST=tempo
       - JAEGER_ENDPOINT=http://tempo:14268/api/traces # send traces to Tempo
@@ -125,8 +121,8 @@ services:
     entrypoint:
       - /bin/prometheus
       - --config.file=/etc/prometheus.yaml
-    expose:
-      - "9090"
+    ports:
+      - 9090:9090
     depends_on:
       - backend
     logging:
@@ -144,11 +140,14 @@ services:
       - ./data/grafana-data/dashboards-provisioning:/etc/grafana/provisioning/dashboards
       - ./data/grafana-data/dashboards:/var/lib/grafana/dashboards
     environment:
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      GF_AUTH_ANONYMOUS_ENABLED: true
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: true
+      VIRTUAL_HOST: dashboard.pethero.test
+      VIRTUAL_PROTO: http
+      VIRTUAL_PORT: 3000
     ports:
-      - "2345:3000"
+      - 3000:3000
     depends_on:
       - prometheus
       - tempo
@@ -165,42 +164,20 @@ services:
     container_name: node_exporter
     image: prom/node-exporter:latest
     restart: unless-stopped
-    expose:
-      - "9100"
-    logging:
-      driver: loki
-      options:
-        loki-url: http://localhost:3100/loki/api/v1/push
-    networks:
-      - back-tier
-
-  nginx:
-    container_name: nginx
-    image: nginx:stable-alpine
-    volumes:
-      - ./nginx/templates:/etc/nginx/templates
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    environment:
-      - NGINX_PORT=80
-      - BACKEND_PORT=5555
     ports:
-      - 80:80
-    depends_on:
-      - backend
-      - postgres
-      - frontend
-      - grafana
+      - 9100:9100
     logging:
       driver: loki
       options:
         loki-url: http://localhost:3100/loki/api/v1/push
     networks:
       - back-tier
-      - front-tier
 
 volumes:
   pet-hero-postgres:
 
 networks:
   front-tier:
+    name: pet-hero-front-tier
   back-tier:
+    name: pet-hero-back-tier
