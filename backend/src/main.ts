@@ -40,6 +40,8 @@ async function bootstrap() {
   app.set('trust proxy', 1)
 
   app.useLogger(app.get(Logger));
+  app.enableShutdownHooks();
+
   app.useGlobalInterceptors(new LoggerErrorInterceptor(), new ClassSerializerInterceptor(
     app.get(Reflector)));
   app.setGlobalPrefix('api');

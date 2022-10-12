@@ -1,5 +1,4 @@
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
-import { UserDetails } from '../utils/types';
 
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -15,7 +14,6 @@ import { UsersService } from '../users/users.service';
 import { EmailParams } from '../utils/types';
 import LoginFailException from './exceptions/loginFail.exception';
 import UserAlreadyExistException from './exceptions/userAlreadyExist.exception';
-import UserDoesNotExistException from './exceptions/userDoesNotExist.exception';
 import ResetTokenPayload from './interface/resetTokenPayload.interface';
 import VerificationTokenPayload from './interface/verificationTokenPayload.interface';
 
@@ -30,16 +28,6 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService
   ) { }
-  async validateUserGoogle(details: UserDetails) {
-    this.logger.debug({ details: details }, 'Validate user details');
-    const user = await this.usersService.findOneByEmail(details.email);
-    if (user) {
-      this.logger.log('User found.');
-      return user;
-    } else {
-      throw new UserDoesNotExistException();
-    }
-  }
 
   async validateUserLocal(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findOneByEmail(email);
@@ -165,7 +153,6 @@ export class AuthService {
 
     const url = `${this.configService.get('EMAIL_RESET_URL')}/${user.id}/?token=${token}`;
 
-    console.log(url)
     const text = `Forgot your password? Click here: <a href="${url}">Reset Email</a>`;
 
     const mail: EmailParams = {

@@ -1,5 +1,14 @@
+import { context, trace } from '@opentelemetry/api';
 import Pino, { Logger, LoggerOptions, transport } from 'pino';
 export const loggerOptions: LoggerOptions = {
+    formatters: {
+        log(object) {
+            const span = trace.getSpan(context.active());
+            if (!span) return { ...object };
+            const { spanId, traceId } = trace.getSpan(context.active())?.spanContext();
+            return { ...object, spanId, traceId };
+        },
+    },
 };
 export const pinoPrettyTransport = transport({
     target: 'pino-pretty',
@@ -22,13 +31,14 @@ export const pinoTransport = transport({
             password: "password",
         },
         labels: {
-            application: "pet-hero-backend"
+            application: "pet-hero-backend",
+            job: "backend"
         }
     },
 });
 
 export const logger: Logger = Pino(
     loggerOptions,
-    pinoPrettyTransport
+    process.env.NODE_ENV === 'production' ? pinoTransport : pinoPrettyTransport
     // destination(process.env.LOG_FILE_NAME),
 );

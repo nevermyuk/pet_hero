@@ -10,6 +10,8 @@ services:
     volumes:
       - /etc/nginx/conf.d
       - /home/Team-20/certs:/etc/nginx/certs
+    networks:
+      - back-tier
 
   dockergen:
     image: nginxproxy/docker-gen
@@ -28,18 +30,16 @@ services:
     expose:
       - "8000"
     environment:
-      - VIRTUAL_HOST=whoami.local
+      - VIRTUAL_HOST=pethero.homes
       - VIRTUAL_PORT=8000
 
   jenkins:
     image: jenkinsci/blueocean
     user: root
     environment:
-      - VIRTUAL_HOST=jenkins.pethero.homes
-      - VIRTUAL_PROTO=https
-      - VIRTUAL_PORT=8443
-      - CERT_NAME=pethero.homes
-      - "JENKINS_OPTS=--httpPort=-1 --httpsPort=8443 --httpsKeyStore=/var/jenkins_home/pethero.homes.jks --httpsKeyStorePassword=wearethetruepetheroes"
+      - VIRTUAL_HOST=jenkins.pethero.local
+      - VIRTUAL_PROTO=http
+      - VIRTUAL_PORT=8080
     depends_on:
       - nginx
       - dockergen
@@ -49,3 +49,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /jenkins-data:/var/jenkins_home
       - ${HOME}:/home
+
+
+networks:
+  front-tier:
+  back-tier:
