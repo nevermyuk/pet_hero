@@ -1,0 +1,75 @@
+version: "3.9"
+
+services:
+  nginx:
+    image: owasp/modsecurity-crs:3.3.4-nginx-alpine-202209221209
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/nginx/conf.d
+      - /certs:/etc/nginx/certs
+
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+
+    networks:
+      - front-tier
+      - back-tier
+
+  dockergen:
+    container_name: dockergen
+    image: nginxproxy/docker-gen
+    command: -notify-sighup nginx -watch /etc/docker-gen/templates/nginx.tmpl
+      /etc/nginx/conf.d/default.conf
+    volumes_from:
+      - nginx
+    depends_on:
+      - nginx
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+    networks:
+      - front-tier
+      - back-tier
+
+  jenkins:
+    container_name: jenkins
+    image: jenkinsci/blueocean
+    user: root
+    environment:
+      - VIRTUAL_HOST=jenkins.pethero.test
+      - VIRTUAL_PROTO=http
+      - VIRTUAL_PORT=8080
+    depends_on:
+      - nginx
+      - dockergen
+    expose:
+      - 8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /jenkins-data:/var/jenkins_home
+      - ${HOME}:/home
+
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+
+    networks:
+      - back-tier
+
+networks:
+  front-tier:
+    driver: bridge
+    name: pet-hero-front-tier
+  back-tier:
+    driver: bridge
+    name: pet-hero-back-tier

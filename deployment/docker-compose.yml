@@ -1,0 +1,51 @@
+version: "3"
+
+services:
+  nginx:
+    image: owasp/modsecurity-crs:3.3.4-nginx-alpine-202209221209
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/nginx/conf.d
+      - /home/Team-20/certs:/etc/nginx/certs
+
+  dockergen:
+    image: nginxproxy/docker-gen
+    command: -notify-sighup nginx -watch /etc/docker-gen/templates/nginx.tmpl
+      /etc/nginx/conf.d/default.conf
+    volumes_from:
+      - nginx
+    depends_on:
+      - nginx
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
+
+  whoami:
+    image: jwilder/whoami
+    expose:
+      - "8000"
+    environment:
+      - VIRTUAL_HOST=whoami.local
+      - VIRTUAL_PORT=8000
+
+  jenkins:
+    image: jenkinsci/blueocean
+    user: root
+    environment:
+      - VIRTUAL_HOST=jenkins.pethero.homes
+      - VIRTUAL_PROTO=https
+      - VIRTUAL_PORT=8443
+      - CERT_NAME=pethero.homes
+      - "JENKINS_OPTS=--httpPort=-1 --httpsPort=8443 --httpsKeyStore=/var/jenkins_home/pethero.homes.jks --httpsKeyStorePassword=wearethetruepetheroes"
+    depends_on:
+      - nginx
+      - dockergen
+    expose:
+      - "8443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /jenkins-data:/var/jenkins_home
+      - ${HOME}:/home

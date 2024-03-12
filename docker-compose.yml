@@ -1,0 +1,183 @@
+version: "3.9"
+services:
+  backend:
+    container_name: backend
+    build:
+      dockerfile: Dockerfile
+      context: "./backend"
+      # Only will build development stage from our dockerfile
+    environment:
+      OTEL_SERVICE_NAME: pet-hero
+      OTEL_EXPORTER_JAEGER_ENDPOINT: http://tempo:14268/api/traces
+      LOG_FILE_NAME: /app/logs/pet-hero.log
+      VIRTUAL_HOST: api.pethero.test
+      VIRTUAL_PROTO: https
+      VIRTUAL_PORT: 5555
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - postgres
+    networks:
+      - back-tier
+
+  postgres:
+    container_name: postgres
+    image: "postgres:14-alpine"
+    env_file:
+      - ./backend/.env
+    expose:
+      - 5432:5432
+    volumes:
+      - pet-hero-postgres:/var/lib/postgresql/data
+    networks:
+      - back-tier
+
+  frontend:
+    container_name: frontend
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./frontend
+    environment:
+      VIRTUAL_HOST: pethero.test
+      VIRTUAL_PROTO: https
+      VIRTUAL_PORT: 3333
+      PORT: 3333
+    networks:
+      - front-tier
+
+    # Monitoring and stuff...
+  tempo:
+    container_name: tempo
+    image: grafana/tempo:1.5.0
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./etc/tempo-local.yaml:/etc/tempo.yaml
+      - ./data/tempo-data:/tmp/tempo
+    ports:
+      - "14268" # jaeger ingest, Jaeger - Thrift HTTP
+      - "14250" # Jaeger - GRPC
+      - "3200:3200" #tempo
+      - "55680" # OpenTelemetry
+      - "6831/udp" # Jaeger - Thrift Compact
+      - "6832/udp" # Jaeger - Thrift Binary
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+    networks:
+      - back-tier
+
+  loki:
+    container_name: loki
+    image: grafana/loki:2.6.1
+    command: -config.file=/etc/loki/loki-local.yaml
+    ports:
+      - 3100:3100 # loki needs to be exposed so it receives logs
+    environment:
+      - JAEGER_AGENT_HOST=tempo
+      - JAEGER_ENDPOINT=http://tempo:14268/api/traces # send traces to Tempo
+      - JAEGER_SAMPLER_TYPE=const
+      - JAEGER_SAMPLER_PARAM=1
+    volumes:
+      - ./etc/loki-local.yaml:/etc/loki/loki-local.yaml
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+    networks:
+      - back-tier
+
+  volume_exporter:
+    container_name: volume_exporter
+    image: mnadeem/volume_exporter
+    command:
+      [
+        "--volume-dir=tempo:/tmp/tempo",
+        "--volume-dir=logs:/app/logs",
+        "--volume-dir=loki:/tmp/loki",
+      ]
+    volumes:
+      - ./data/logs:/app/logs
+      - ./data/tempo-data:/tmp/tempo
+      - ./data/loki-data:/tmp/loki
+    ports:
+      - 9889:9888
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+    networks:
+      - back-tier
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    volumes:
+      - ./etc/prometheus.yaml:/etc/prometheus.yaml
+    entrypoint:
+      - /bin/prometheus
+      - --config.file=/etc/prometheus.yaml
+    ports:
+      - 9090:9090
+    depends_on:
+      - backend
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+    networks:
+      - back-tier
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:9.1.1-ubuntu
+    volumes:
+      - ./data/grafana-data/datasources:/etc/grafana/provisioning/datasources
+      - ./data/grafana-data/dashboards-provisioning:/etc/grafana/provisioning/dashboards
+      - ./data/grafana-data/dashboards:/var/lib/grafana/dashboards
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: true
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: true
+      VIRTUAL_HOST: dashboard.pethero.test
+      VIRTUAL_PROTO: http
+      VIRTUAL_PORT: 3000
+    ports:
+      - 3000:3000
+    depends_on:
+      - prometheus
+      - tempo
+      - loki
+      - volume_exporter
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+    networks:
+      - back-tier
+
+  node_exporter:
+    container_name: node_exporter
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    ports:
+      - 9100:9100
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+    networks:
+      - back-tier
+
+volumes:
+  pet-hero-postgres:
+
+networks:
+  front-tier:
+    name: pet-hero-front-tier
+  back-tier:
+    name: pet-hero-back-tier
